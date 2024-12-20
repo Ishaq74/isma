@@ -1,0 +1,108 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { SITE_TITLE, SITE_DESCRIPTION } from '../../consts';
+import { getCollection } from 'astro:content';
+import PostCard from '../../components/Card/PostCard.astro';
+import Grid from '@components/html/Grid.astro';
+
+// Récupère la catégorie depuis l'URL
+const { categoryslug } = Astro.params;
+
+// Récupère les collections 'blog' et 'categories'
+const blog = await getCollection('blog');
+const categories = await getCollection('categories');
+
+// Affiche les produits et les catégories dans la console pour vérifier leur structure
+console.log('Categories:', categories);
+console.log('Blog:', blog);
+
+// Recherche de la catégorie qui correspond au slug
+const category = categories.find(cat => cat.slug === categoryslug);
+
+// Vérifie si la catégorie existe
+if (!category) {
+  // Si la catégorie n'existe pas, retourner un message
+  throw new Error(`La catégorie ${categoryslug} n'existe pas.`);
+}
+
+// Log la catégorie sélectionnée
+console.log('Category selected:', category);
+
+// Filtrer les produits en fonction de la catégorie
+const filteredPosts = blog.filter(post => {
+  // Log pour chaque produit
+  console.log('Checking post category:', post.data.category);
+  
+  return post.data.category && post.data.category.slug === category.slug;
+});
+
+// Vérifie les produits filtrés
+console.log('Posts filtrés:', filteredPosts);
+
+// Fonction de tri pour les dates
+const sortByDate = (a, b) => {
+  const dateA = a.data.releaseDate || a.data.pubDate || a.data.reviewDate || a.data.createdAt;
+  const dateB = b.data.releaseDate || b.data.pubDate || b.data.reviewDate || b.data.createdAt;
+  
+  return (dateB ? new Date(dateB).getTime() : 0) - (dateA ? new Date(dateA).getTime() : 0);
+};
+
+// Appliquer le tri des produits
+const sortedPosts = filteredPosts.sort(sortByDate);
+---
+
+<!doctype html>
+<html lang="fr">
+<head>
+  <BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans">
+  <Header />
+  <main class="max-w-7xl mx-auto px-4 py-8">
+      <Grid
+        columnsSm="2"
+        columnsMd="3"
+        columnsLg="4"
+        columnsXl="4"
+        columns2xl="5"
+        gap="6"
+        backgroundColor="primary-500"
+        title={`Articles en catégorie: ${categoryslug}`}
+        subtitle={`Les derniers articles en catégorie ${categoryslug}`}
+        description={`Tous les articles de la catégorie "${categoryslug}".`}
+        titleAlign="center"
+        subtitleAlign="center"
+        descriptionAlign="center"
+        titleColor="black"
+        subtitleColor="gray"
+        descriptionColor="gray"
+        titleSize="xl"
+        subtitleSize="base"
+        descriptionSize="base"
+        paddingGlobal="6"
+        marginGlobal="4"
+      >
+      {sortedPosts.length > 0 ? (
+    sortedPosts.slice(0, 5).map(blog => (
+      <PostCard
+        id={blog.data.id}
+        title={blog.data.title}
+        excerpt={blog.data.excerpt}
+        pubDate={blog.data.pubDate}
+        updatedAt={blog.data.updatedAt}
+        heroImage={blog.data.heroImage}
+        image_alt={blog.data.image_alt}
+        slug={blog.slug}
+      />
+    ))
+  ) : (
+    <p>Aucun produit trouvé dans cette catégorie.</p>
+  )}
+      </Grid>
+  </main>
+  <Footer />
+</body>
+</html>

@@ -1,0 +1,33 @@
+---
+import { SEO } from "astro-seo";
+// Props dynamiques
+const {
+  seoTitle = "Titre global",
+  seoDescription = "Description par défaut du site.",
+  seoOpenGraph = {
+    basic: {
+      title: "Titre global",
+      type: "website",
+      image: "/images/og-image-default.jpg",
+    },
+  },
+  seoTwitter = { creator: "@defaultTwitter" },
+  seoExtend = {},
+} = Astro.props;
+---
+
+<html lang="fr">
+  <head>
+    <SEO
+      title={seoTitle}
+      description={seoDescription}
+      openGraph={seoOpenGraph}
+      twitter={seoTwitter}
+      extend={seoExtend}
+    />
+<head>
+  </head>
+    <body>
+        <slot />
+    </body>
+</html>

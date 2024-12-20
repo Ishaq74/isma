@@ -1,0 +1,142 @@
+---
+export const prerender = true;
+
+import { getEntry, getEntries, type CollectionEntry } from 'astro:content';
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import FeatureCard from '../components/Card/FeatureCard.astro';
+import ReviewCard from '../components/Card/ReviewCard.astro';
+import type { FeatureData, ProductData } from 'src/types/collections';
+
+// Type des données de la collection
+type Props = CollectionEntry<'products'>['data'];
+
+// Récupérer les données principales
+const {
+  name,
+  description,
+  price,
+  image_url,
+  image_alt,
+  gallery,
+  sku,
+  brand,
+  manufacturer,
+  weight,
+  dimensions,
+  availability,
+  warranty,
+  specifications,
+  category,
+  features,
+  reviews,
+  faqs,
+} = Astro.props;
+
+// Récupération des données des fonctionnalités
+const featuresData = features ? await getEntries(features) : [];
+const reviewsData = reviews ? await getEntries(reviews) : [];
+const faqsData = faqs ? await getEntries(faqs) : [];
+
+---
+
+<html lang="fr">
+<head>
+  <BaseHead title={name} description={description} />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="font-sans bg-gray-100">
+  <Header />
+  <main class="max-w-7xl mx-auto px-4 py-6">
+    <article class="bg-white shadow-lg rounded-lg overflow-hidden">
+      <!-- Image principale -->
+      {image_url && (
+        <div class="relative">
+          <img class="w-full h-64 object-cover" src={image_url} alt={image_alt ?? 'Image du produit'} />
+          <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-transparent to-transparent h-24"></div>
+        </div>
+      )}
+
+      <!-- Contenu principal -->
+      <div class="p-6">
+        <div class="flex items-center justify-between">
+          <h1 class="text-3xl font-bold text-gray-900">{name}</h1>
+          <p class="text-2xl font-bold text-gray-900">{price}€</p>
+        </div>
+        <p class="text-gray-600 mt-2">{description}</p>
+
+        <!-- Détails du produit -->
+        <div class="mt-6">
+          <h2 class="text-xl font-semibold text-gray-800">Détails du produit</h2>
+          <dl class="mt-4 space-y-2">
+            <div class="flex justify-between">
+              <dt class="font-semibold text-gray-700">Catégorie :</dt>
+              <dd class="text-gray-600">{category?.data?.name ?? 'N/A'}</dd>
+            </div>
+            <!-- Autres détails ici -->
+          </dl>
+        </div>
+
+        <!-- Galerie -->
+        {gallery?.length > 0 && (
+          <div class="mt-6">
+            <h2 class="text-xl font-semibold text-gray-800">Galerie</h2>
+            <div class="flex flex-wrap gap-4 mt-4">
+              {gallery.map((img: { image: string }) => (
+                <img class="w-32 h-32 object-cover rounded-lg" src={img.image} alt="Image de la galerie" />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <!-- Fonctionnalités -->
+        {featuresData.length > 0 && (
+          <div class="mt-6">
+            <h2 class="text-xl font-semibold text-gray-800">Fonctionnalités</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+              {featuresData.map((feature : CollectionEntry<'features'>) => (
+                <FeatureCard
+                  name={feature.data.name}
+                  description={feature.data.description}
+                  icon_url={feature.data.icon_url}
+                  icon_alt={feature.data.icon_alt}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+<!-- Avis -->
+{reviewsData?.length > 0 && (
+  <div class="mt-6">
+    <h2 class="text-xl font-semibold text-gray-800">Reviews</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+      {reviewsData.map((review: CollectionEntry<'reviews'>) => (
+        <ReviewCard review={review} />
+      ))}
+    </div>
+  </div>
+)}
+
+        <!-- FAQ -->
+        {faqsData?.length > 0 && (
+          <div class="mt-6">
+            <h2 class="text-xl font-semibold text-gray-800">FAQ</h2>
+            <ul class="mt-4 space-y-4 text-gray-600">
+              {faqsData.map((faq: CollectionEntry<'faqs'>) => (
+                <li class="border p-4 rounded-lg">
+                  <div class="font-semibold text-gray-800">{faq.data.question}</div>
+                  <p>{faq.data.answer}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </article>
+  </main>
+  <Footer />
+</body>
+</html>

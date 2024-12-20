@@ -1,0 +1,36 @@
+---
+// CategoryCard.astro
+import { getCollection } from 'astro:content';
+
+type CategoryCardProps = {
+  type: string; // Le type pour filtrer les catégories, ex: 'product', 'blog', etc.
+};
+
+const { type } = Astro.props as CategoryCardProps;
+
+// Récupère les collections 'categories'
+const categories = await getCollection('categories');
+
+// Filtrer les catégories en fonction du type passé en props
+const filteredCategories = categories.filter(category => category.data.type === type);
+---
+
+<div class="category-card-container grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+  {filteredCategories.length > 0 ? (
+    filteredCategories.map((category) => (
+      <div class="category-card bg-white shadow-lg rounded-lg overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-xl">
+        <a href={`/category/${category.slug}`} class="block">
+          {category.data.image_url && (
+            <img src={category.data.image_url} alt={category.data.name} class="w-full h-48 object-cover rounded-t-lg" />
+          )}
+          <div class="p-4">
+            <h3 class="text-xl font-semibold text-gray-900">{category.data.name}</h3>
+            {category.data.description && <p class="text-gray-600 text-sm mt-2">{category.data.description}</p>}
+          </div>
+        </a>
+      </div>
+    ))
+  ) : (
+    <p>Aucune catégorie trouvée pour ce type.</p>
+  )}
+</div>

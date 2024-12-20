@@ -1,0 +1,100 @@
+---
+import { getCollection } from 'astro:content';
+import ProductCard from '@components/Card/ProductCard.astro';
+import PostCard from '@components/Card/PostCard.astro';
+import CategoryCard from '@components/Card/CategoryCard.astro';
+
+type DisplayCardProps = {
+  type: string;  // Le type de collection (e.g. 'product', 'blog', 'category')
+  filterFeatured?: boolean;  // Filtrer les éléments en vedette (true ou false)
+  sortBy?: 'date' | 'name';  // Critère de tri (par date ou par nom)
+  limit?: number;  // Nombre d'éléments à afficher
+  customFilter?: (item: any) => boolean;  // Filtrage personnalisé basé sur une logique
+  showPagination?: boolean; // Afficher la pagination
+};
+
+const { type, filterFeatured = false, sortBy = 'date', limit = 10, customFilter, showPagination = false } = Astro.props as DisplayCardProps;
+
+// Récupérer les collections en fonction du type
+let collection;
+if (type === 'product') {
+  collection = await getCollection('products');
+} else if (type === 'blog') {
+  collection = await getCollection('blog');
+} else if (type === 'category') {
+  collection = await getCollection('categories');
+} else {
+  throw new Error(`Collection de type ${type} inconnue`);
+}
+
+// Appliquer le filtre isFeatured si nécessaire
+let filteredCollection = filterFeatured
+  ? collection.filter(item => item.data.isFeatured === true)
+  : collection;
+
+// Appliquer le filtre personnalisé (si fourni)
+if (customFilter) {
+  filteredCollection = filteredCollection.filter(customFilter);
+}
+
+// Fonction de tri
+const sortedCollection = filteredCollection.sort((a, b) => {
+  if (sortBy === 'date') {
+    return new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime();  // Tri par date
+  } else if (sortBy === 'name') {
+    return a.data.name.localeCompare(b.data.name);  // Tri par nom
+  }
+  return 0;
+});
+
+// Limiter les résultats selon la valeur de 'limit'
+const limitedCollection = sortedCollection.slice(0, limit);
+
+---
+
+  {limitedCollection.length > 0 ? (
+    limitedCollection.map(item => {
+      if (type === 'product') {
+        return (
+          <ProductCard
+            name={item.data.name}
+            price={item.data.price}
+            image_url={item.data.image_url}
+            image_alt={item.data.name}
+            slug={item.slug}
+            rating={item.data.rating}
+          />
+        );
+      } else if (type === 'blog') {
+        return (
+          <PostCard
+            id={item.slug}
+            title={item.data.title}
+            excerpt={item.data.excerpt}
+            pubDate={item.data.pubDate}
+            slug={item.slug}
+            heroImage={item.data.heroImage}
+            image_alt={item.data.title}
+          />
+        );
+      } else if (type === 'category') {
+        return (
+          <CategoryCard
+            name={item.data.name}
+            description={item.data.description}
+            image_url={item.data.image_url}
+            slug={item.slug}
+          />
+        );
+      }
+      return null;
+    })
+  ) : (
+    <p>Aucun élément trouvé.</p>
+  )}
+
+{showPagination && filteredCollection.length > limit && (
+  <div class="pagination">
+    <button class="pagination-button">Charger plus</button>
+  </div>
+)}

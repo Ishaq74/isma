@@ -1,0 +1,44 @@
+---
+import { getEntry } from 'astro:content';
+
+// Charge l'organisation
+const organization = await getEntry('organizations', 'orga');
+---
+<header>
+    <h1>{organization.data.name}</h1>
+    {organization.data.description && <p>{organization.data.description}</p>}
+    {organization.data.logo_url && (
+      <img src={organization.data.logo_url} alt={organization.data.logo_alt || "Logo"} />
+    )}
+  </header>
+  
+  <section>
+    <h2>Contact</h2>
+    {organization.data.contactPoints?.length > 0 ? (
+      <ul>
+        {organization.data.contactPoints.map((point, index) => (
+          <li>
+            <strong>{point.type}:</strong> {point.value}
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p>Aucun point de contact disponible.</p>
+    )}
+  </section>
+  
+  <section>
+    <h2>Horaires</h2>
+    {organization.data.openingHours?.length > 0 ? (
+      <ul>
+        {organization.data.openingHours.map((hours, index) => (
+          <li>
+            {hours.day_of_week}: {hours.opening_time} - {hours.closing_time}
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p>Horaires non définis.</p>
+    )}
+  </section>
+  
